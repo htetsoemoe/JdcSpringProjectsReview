@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.jdc.book.root.dto.Book;
@@ -22,7 +25,11 @@ public class FileUploadService {
 	
 	@Autowired
 	private BookService bookService;
+		
+	@Autowired
+	private Validator validator;
 
+	@Transactional
 	public String upload(MultipartFile file) {
 		var uploadBooks = readLines(file);
 		
@@ -35,11 +42,20 @@ public class FileUploadService {
 			
 			for(var book : entry.getValue()) {
 				book.setCategory(category);
+				
+				var result = new BeanPropertyBindingResult(book, "target");
+				validator.validate(book, result);
+				
+				if (result.hasErrors()) {
+					var message = result.getFieldErrors().stream().map(field -> field.getDefaultMessage()).findFirst().get();
+					throw new UploadBookAppException(message);
+				}
+								
 				bookService.save(book);
 			}
 		}
 		
-		return "File Upload Successful!";
+		return "%d books have been uploaded.".formatted(uploadBooks.size());
 	}
 
 	private List<Book> readLines(MultipartFile file) {
@@ -63,7 +79,7 @@ public class FileUploadService {
 	
 	private Book readBook(String line) {
 		var array = line.split("\t");
-		if (array.length != 5) {
+		if (array.length < 4 && array.length > 5) {
 			// throws errors
 		}
 		
@@ -72,8 +88,11 @@ public class FileUploadService {
 		book.setAuthor(array[1].trim());
 		book.setCategory(new Category(array[2].trim()));
 		book.setPrice(Integer.parseInt(array[3].trim()));
-		book.setRemark(array[4]);
 		
+		if (array.length > 4) {
+			book.setRemark(array[4]);
+		}
+			
 		return book;
 	}
 }

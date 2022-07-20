@@ -8,7 +8,6 @@ import java.util.Optional;
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
@@ -31,6 +30,7 @@ public class BookService {
 	
 	@Autowired
 	private BookRowMapper rowMapper;
+
 	
 	@PostConstruct
 	private void init() {
@@ -80,7 +80,7 @@ public class BookService {
 	}
 
 	public int save(Book book) {
-		
+
 		if (book.getId() == 0) {
 			return bookInsert.executeAndReturnKeyHolder(book.getInsertParams())
 					.getKey().intValue();

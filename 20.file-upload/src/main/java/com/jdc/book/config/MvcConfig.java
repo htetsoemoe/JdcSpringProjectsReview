@@ -24,6 +24,9 @@ public class MvcConfig implements WebMvcConfigurer{
 	@Autowired
 	private CategoryFormatter formatter;
 	
+	@Autowired
+	private Validator validator;
+	
 	@Override
 	public void addViewControllers(ViewControllerRegistry registry) {
 		registry.addRedirectViewController("/", "/home");
@@ -38,25 +41,14 @@ public class MvcConfig implements WebMvcConfigurer{
 	public void configureViewResolvers(ViewResolverRegistry registry) {
 		registry.jsp("/views/", ".jsp");
 	}
-		
-	@Bean
-	ReloadableResourceBundleMessageSource messageSource() {
-		var source = new ReloadableResourceBundleMessageSource();
-		source.setBasename("classpath:messages");
-		source.setDefaultEncoding("UTF-8");
-		return source;
-	}
-	
-	
-	@Override
-	public Validator getValidator() {
-		var validator = new LocalValidatorFactoryBean();
-		validator.setValidationMessageSource(messageSource());
-		return validator;
-	}
 	
 	@Override
 	public void addFormatters(FormatterRegistry registry) {
 		registry.addFormatter(formatter);
+	}
+	
+	@Override
+	public Validator getValidator() {
+		return validator;
 	}
 }
